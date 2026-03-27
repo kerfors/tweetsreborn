@@ -25,46 +25,14 @@
     </div>
     <div id="search-status"></div>
     <div id="results"></div>
-    <section class="highlights" id="highlights">
-        <h2 class="highlights-title">✨ Most popular tweets</h2>
-        <div class="viral-card">
-            <div class="viral-text"><a href="index.html?q=%23BigData" class="hashtag">#BigData</a> <a href="index.html?q=%23DataScience" class="hashtag">#DataScience</a> in 1939 -&gt; &quot;Staff sorting 4M used tickets from <a href="index.html?q=%23London" class="hashtag">#London</a> Underground to analyse line use.&quot; <a href="https://twitter.com/SirWilliamD/status/497635856182960128/photo/1" target="_blank" rel="noopener">pic.twitter.com/fJ3AfQN1Bw</a></div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 171 &nbsp; ♥ 79</span>
-                <span class="viral-date">Aug 8, 2014</span>
-                <a href="2014/08/497662085594349568.html" class="viral-link">Read →</a>
-            </div>
-        </div>
-        <div class="viral-card">
-            <div class="viral-text">Distributed Data Mesh &gt; Monolithic Data Lake by <span class="mention">@zhamakd</span> <br>- serving &gt; ingesting<br>- discovering/using &gt; extracting/loading<br>- publishing events as streams &gt; flowing data via centralized pipelines<br>- ecosystem of data products &gt; centralized data platform <a href="https://martinfowler.com/articles/data-monolith-to-mesh.html#DataAndSelf-servePlatformDesignConvergence" target="_blank" rel="noopener">martinfowler.com/articles/data-…</a></div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 8 &nbsp; ♥ 21</span>
-                <span class="viral-date">Jul 7, 2019</span>
-                <a href="2019/07/1147752858403713024.html" class="viral-link">Read →</a>
-            </div>
-        </div>
-        <div class="viral-card">
-            <div class="viral-text">Putting Data and Ontologies together using a <span class="mention">@neo4j</span> backed ontology store <a href="https://github.com/SciGraph/SciGraph" target="_blank" rel="noopener">github.com/SciGraph/SciGr…</a> --<span class="mention">@ontowonka</span>&#x27;s <a href="index.html?q=%23swat4ls" class="hashtag">#swat4ls</a> keynote</div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 10 &nbsp; ♥ 16</span>
-                <span class="viral-date">Dec 9, 2015</span>
-                <a href="2015/12/674587273321652224.html" class="viral-link">Read →</a>
-            </div>
-        </div>
-        <div class="viral-card">
-            <div class="viral-text"><a href="http://Data.Gov" target="_blank" rel="noopener">Data.Gov</a> Vocabularies launched: <a href="http://vocab.data.gov/" target="_blank" rel="noopener">vocab.data.gov</a> e.g. Government Data Vocabulary, Hospital Vocabulary <a href="index.html?q=%23linkeddata" class="hashtag">#linkeddata</a></div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 16 &nbsp; ♥ 10</span>
-                <span class="viral-date">Feb 17, 2012</span>
-                <a href="2012/02/170583352481550337.html" class="viral-link">Read →</a>
-            </div>
-        </div>
-        <div class="viral-card">
-            <div class="viral-text">&quot;The goal is not data sharing. The goal is to create an <a href="index.html?q=%23openscience" class="hashtag">#openscience</a> environment that supports the generation of new knowledge&quot; --<span class="mention">@hmkyale</span></div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 16 &nbsp; ♥ 8</span>
-                <span class="viral-date">May 5, 2014</span>
-                <a href="2014/05/463405210275438593.html" class="viral-link">Read →</a>
+    <section class="pinned-section">
+        <div class="pinned-label">📌 Pinned tweet</div>
+        <div class="pinned-card">
+            <div class="pinned-text"><a href="index.html?q=%23BigData" class="hashtag">#BigData</a> <a href="index.html?q=%23DataScience" class="hashtag">#DataScience</a> in 1939 -&gt; &quot;Staff sorting 4M used tickets from <a href="index.html?q=%23London" class="hashtag">#London</a> Underground to analyse line use.&quot; <a href="https://twitter.com/SirWilliamD/status/497635856182960128/photo/1" target="_blank" rel="noopener">pic.twitter.com/fJ3AfQN1Bw</a></div>
+            <div class="pinned-meta">
+                <span class="pinned-date">Aug 8, 2014</span>
+                <span class="pinned-stats">🔁 171 &nbsp; ♥ 79</span>
+                <a href="2014/08/497662085594349568.html" class="pinned-link">Read →</a>
             </div>
         </div>
     </section>
@@ -160,7 +128,7 @@ async function doSearch() {
         status.textContent = '';
         results.innerHTML = '';
         grid.style.display = '';
-        document.getElementById('highlights').style.display = '';
+        document.querySelector('.pinned-section').style.display = '';
         return;
     }
 
@@ -169,7 +137,7 @@ async function doSearch() {
     const matches = tweets.filter(t => t.text.toLowerCase().includes(ql));
 
     grid.style.display = 'none';
-    document.getElementById('highlights').style.display = 'none';
+    document.querySelector('.pinned-section').style.display = 'none';
     status.textContent = matches.length === 0
         ? 'No results.'
         : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
