@@ -26,18 +26,7 @@ BIO = "Lifelong Learner and Information Architect caring about clinical trial da
 LOCATION = "Kungälv, Sweden"
 
 # Set to None to generate all, or a list of IDs for prototyping
-PROTOTYPE_IDS = [
-    "1368471677785538567",
-    "559017622948577281",
-    "497662085594349568",
-    "674587273321652224",
-    "469536454390345729",
-    "1147752858403713024",
-    "1100424875074834436",
-    "1024720506539397131",
-    "1059376229789384704",
-    "78486476698042368",
-]
+PROTOTYPE_IDS = None
 
 
 # --- CSS ---
