@@ -240,7 +240,6 @@ a:hover { text-decoration: underline; }
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 12px 16px;
-    font-size: 13px;
     color: var(--text-secondary);
     text-decoration: none;
     transition: border-color 0.15s ease;
@@ -248,8 +247,8 @@ a:hover { text-decoration: underline; }
 .tweet-nav a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
 .tweet-nav .nav-prev { text-align: left; }
 .tweet-nav .nav-next { text-align: right; }
-.tweet-nav .nav-label { font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
-.tweet-nav .nav-date { font-size: 13px; }
+.tweet-nav .nav-label { font-size: 11px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.7; }
+.tweet-nav .nav-date { font-size: 13px; display: block; }
 
 .single-tweet .tweet-text {
     font-size: 20px;
