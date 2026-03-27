@@ -29,7 +29,7 @@ LOCATION = "Kungälv, Sweden"
 PROTOTYPE_IDS = None
 
 # Pinned tweet shown on front page. Set to a tweet ID string, or None to hide.
-PINNED_TWEET_ID = "497662085594349568"
+PINNED_TWEET_ID = "1394956608858427392"
 
 
 # --- CSS ---
