@@ -19,10 +19,13 @@
     <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
         10 original tweets · April 2017 – November 2024
     </p>
-    <p style="text-align:center;margin-bottom:24px;">
-        <a href="search.html" style="display:inline-block;padding:8px 20px;background:var(--accent);color:#fff;border-radius:8px;font-size:14px;">Search tweets</a>
-    </p>
-    <div class="year-grid">
+    <div class="search-box">
+        <input type="search" id="q" placeholder="Search 10 tweets…">
+        <button onclick="doSearch()">Search</button>
+    </div>
+    <div id="search-status"></div>
+    <div id="results"></div>
+    <div id="year-grid" class="year-grid">
         <a href="2021/index.html" class="year-card">
             <span class="year-label">2021</span>
             <span class="count">1 tweet</span>
@@ -52,5 +55,57 @@
 <footer class="site-footer">
     Archived tweets from @kerfors · Powered by <a href="https://github.com/kerfors/tweetsreborn">TweetsReborn</a>
 </footer>
+<script>
+let data = null;
+
+async function loadData() {
+    if (data) return data;
+    const r = await fetch('search.json');
+    data = await r.json();
+    return data;
+}
+
+function highlight(text, query) {
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return text.replace(new RegExp(escaped, 'gi'), m => '<mark>' + m + '</mark>');
+}
+
+async function doSearch() {
+    const q = document.getElementById('q').value.trim();
+    const status = document.getElementById('search-status');
+    const results = document.getElementById('results');
+    const grid = document.getElementById('year-grid');
+
+    if (q.length < 2) {
+        status.textContent = '';
+        results.innerHTML = '';
+        grid.style.display = '';
+        return;
+    }
+
+    const tweets = await loadData();
+    const ql = q.toLowerCase();
+    const matches = tweets.filter(t => t.text.toLowerCase().includes(ql));
+
+    grid.style.display = 'none';
+    status.textContent = matches.length === 0
+        ? 'No results.'
+        : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
+
+    results.innerHTML = matches.map(t => `
+        <div class="search-result">
+            <a href="${t.url}">
+                <div class="result-text">${highlight(t.text, q)}</div>
+                <div class="result-date">${t.date}</div>
+            </a>
+        </div>`).join('');
+}
+
+document.getElementById('q').addEventListener('input', doSearch);
+document.getElementById('q').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.target.value = ''; doSearch(); }
+});
+</script>
 </body>
 </html>
