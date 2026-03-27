@@ -28,6 +28,9 @@ LOCATION = "Kungälv, Sweden"
 # Set to None to generate all, or a list of IDs for prototyping
 PROTOTYPE_IDS = None
 
+# Pinned tweet shown on front page. Set to a tweet ID string, or None to hide.
+PINNED_TWEET_ID = "1394956608858427392"
+
 
 # --- CSS ---
 SHARED_CSS = """
@@ -217,61 +220,45 @@ a:hover { text-decoration: underline; }
     margin-top: 4px;
 }
 
-/* --- Highlights / viral tweets --- */
-.highlights {
-    margin: 0 0 32px 0;
+/* --- Pinned tweet --- */
+.pinned-section {
+    margin: 0 0 28px 0;
 }
-.highlights-title {
-    font-family: var(--font-display);
-    font-size: 16px;
+.pinned-label {
+    font-size: 12px;
     color: var(--text-secondary);
-    text-align: center;
-    margin: 0 0 16px 0;
-    font-weight: 500;
-    letter-spacing: 0.03em;
     text-transform: uppercase;
-    font-style: normal;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
-.viral-card {
+.pinned-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 12px;
-    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    padding: 18px 20px;
 }
-.viral-card:hover {
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-    border-color: var(--accent);
-}
-.viral-text {
+.pinned-text {
     font-size: 15px;
     line-height: 1.55;
     color: var(--text-primary);
     margin-bottom: 12px;
 }
-.viral-meta {
+.pinned-meta {
     display: flex;
     align-items: center;
     gap: 16px;
     font-size: 13px;
     color: var(--text-secondary);
 }
-.viral-stats {
-    font-weight: 500;
-    color: var(--text-secondary);
-}
-.viral-date {
-    flex: 1;
-}
-.viral-link {
+.pinned-date { flex: 1; }
+.pinned-stats { font-weight: 500; }
+.pinned-link {
     color: var(--accent);
     text-decoration: none;
     font-weight: 500;
 }
-.viral-link:hover {
-    text-decoration: underline;
-}
+.pinned-link:hover { text-decoration: underline; }
 
 /* --- Single tweet page --- */
 .back-link {
@@ -719,29 +706,32 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
     dates = sorted(parse_date(t['created_at']) for t in all_tweets)
     date_range = f"{dates[0].strftime('%b %Y')} – {dates[-1].strftime('%b %Y')}" if dates else ""
 
-    # Top 5 viral tweets by likes + retweets
-    top_tweets = sorted(all_tweets, key=lambda t: int(t.get('favorite_count', 0)) + int(t.get('retweet_count', 0)), reverse=True)[:5]
-
-    def viral_card(t):
-        tweet = t.get('tweet', t)
-        tid = tweet['id_str']
-        dt = parse_date(tweet['created_at'])
-        date_str = dt.strftime('%b %-d, %Y')
-        year, month = dt.year, dt.month
-        fav = int(tweet.get('favorite_count', 0))
-        rt = int(tweet.get('retweet_count', 0))
-        text = render_tweet_text(tweet, depth=0)
-        url = f"{year}/{month:02d}/{tid}.html"
-        return f"""        <div class="viral-card">
-            <div class="viral-text">{text}</div>
-            <div class="viral-meta">
-                <span class="viral-stats">🔁 {rt} &nbsp; ♥ {fav}</span>
-                <span class="viral-date">{date_str}</span>
-                <a href="{url}" class="viral-link">Read →</a>
+    # Pinned tweet
+    pinned_html = ""
+    if PINNED_TWEET_ID:
+        tweet_map = {t.get('tweet', t)['id_str']: t for t in all_tweets}
+        pinned = tweet_map.get(PINNED_TWEET_ID)
+        if pinned:
+            t = pinned.get('tweet', pinned)
+            tid = t['id_str']
+            dt = parse_date(t['created_at'])
+            date_str = dt.strftime('%b %-d, %Y')
+            year, month = dt.year, dt.month
+            fav = int(t.get('favorite_count', 0))
+            rt = int(t.get('retweet_count', 0))
+            text = render_tweet_text(t, depth=0)
+            url = f"{year}/{month:02d}/{tid}.html"
+            pinned_html = f"""    <section class="pinned-section">
+        <div class="pinned-label">📌 Pinned tweet</div>
+        <div class="pinned-card">
+            <div class="pinned-text">{text}</div>
+            <div class="pinned-meta">
+                <span class="pinned-date">{date_str}</span>
+                <span class="pinned-stats">🔁 {rt} &nbsp; ♥ {fav}</span>
+                <a href="{url}" class="pinned-link">Read →</a>
             </div>
-        </div>"""
-
-    highlights_html = "\n".join(viral_card(t) for t in top_tweets)
+        </div>
+    </section>"""
 
     page_html = html_head(f"@{HANDLE} — Tweet Archive", depth)
     page_html += f"""<body>
@@ -761,10 +751,7 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
     </div>
     <div id="search-status"></div>
     <div id="results"></div>
-    <section class="highlights" id="highlights">
-        <h2 class="highlights-title">✨ Most popular tweets</h2>
-{highlights_html}
-    </section>
+{pinned_html}
     <div id="year-grid" class="year-grid">
 """
     for year in sorted(years_data.keys(), reverse=True):
@@ -804,7 +791,7 @@ async function doSearch() {{
         status.textContent = '';
         results.innerHTML = '';
         grid.style.display = '';
-        document.getElementById('highlights').style.display = '';
+        document.querySelector('.pinned-section').style.display = '';
         return;
     }}
 
@@ -813,7 +800,7 @@ async function doSearch() {{
     const matches = tweets.filter(t => t.text.toLowerCase().includes(ql));
 
     grid.style.display = 'none';
-    document.getElementById('highlights').style.display = 'none';
+    document.querySelector('.pinned-section').style.display = 'none';
     status.textContent = matches.length === 0
         ? 'No results.'
         : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
