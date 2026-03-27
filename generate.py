@@ -532,12 +532,12 @@ def generate_tweet_page(tweet, output_dir, prev_tweet=None, next_tweet=None):
     nav_parts = []
     if prev_tweet:
         prev_dt = parse_date(prev_tweet['created_at'])
-        nav_parts.append(f'<a href="{tweet_url(prev_tweet, depth)}" class="nav-prev"><span class="nav-label">← Older</span><span class="nav-date">{format_date_short(prev_dt)}</span></a>')
+        nav_parts.append(f'<a href="{tweet_url(prev_tweet, depth)}" class="nav-prev"><div class="nav-label">← Older</div><div class="nav-date">{format_date_short(prev_dt)}</div></a>')
     else:
         nav_parts.append('<span></span>')
     if next_tweet:
         next_dt = parse_date(next_tweet['created_at'])
-        nav_parts.append(f'<a href="{tweet_url(next_tweet, depth)}" class="nav-next"><span class="nav-label">Newer →</span><span class="nav-date">{format_date_short(next_dt)}</span></a>')
+        nav_parts.append(f'<a href="{tweet_url(next_tweet, depth)}" class="nav-next"><div class="nav-label">Newer →</div><div class="nav-date">{format_date_short(next_dt)}</div></a>')
     else:
         nav_parts.append('<span></span>')
     nav_html = f'<div class="tweet-nav">{"".join(nav_parts)}</div>'
