@@ -196,6 +196,29 @@ a:hover { text-decoration: underline; }
 }
 .back-link:hover { color: var(--accent); text-decoration: none; }
 
+.tweet-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 12px;
+}
+.tweet-nav a {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+}
+.tweet-nav a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.tweet-nav .nav-prev { text-align: left; }
+.tweet-nav .nav-next { text-align: right; }
+.tweet-nav .nav-label { font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tweet-nav .nav-date { font-size: 13px; }
+
 .single-tweet .tweet-text {
     font-size: 20px;
     line-height: 1.65;

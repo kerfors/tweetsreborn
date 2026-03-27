@@ -228,6 +228,29 @@ a:hover { text-decoration: underline; }
 }
 .back-link:hover { color: var(--accent); text-decoration: none; }
 
+.tweet-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 12px;
+}
+.tweet-nav a {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+}
+.tweet-nav a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.tweet-nav .nav-prev { text-align: left; }
+.tweet-nav .nav-next { text-align: right; }
+.tweet-nav .nav-label { font-size: 11px; display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tweet-nav .nav-date { font-size: 13px; }
+
 .single-tweet .tweet-text {
     font-size: 20px;
     line-height: 1.65;
@@ -486,7 +509,14 @@ def render_tweet_card(tweet, depth, is_single=False):
         return f'<div class="tweet-card{single_class}"><a href="{link}" class="tweet-link">{card_inner}</a></div>'
 
 
-def generate_tweet_page(tweet, output_dir):
+def tweet_url(tweet, depth=2):
+    dt = parse_date(tweet['created_at'])
+    year = dt.strftime('%Y')
+    month = dt.strftime('%m')
+    return f"{'../' * depth}{year}/{month}/{tweet['id_str']}.html"
+
+
+def generate_tweet_page(tweet, output_dir, prev_tweet=None, next_tweet=None):
     """Generate a single tweet HTML page."""
     dt = parse_date(tweet['created_at'])
     year = dt.strftime('%Y')
@@ -499,11 +529,26 @@ def generate_tweet_page(tweet, output_dir):
     depth = 2  # year/month
     month_name = dt.strftime('%B %Y')
 
+    # Prev/next navigation
+    nav_parts = []
+    if prev_tweet:
+        prev_dt = parse_date(prev_tweet['created_at'])
+        nav_parts.append(f'<a href="{tweet_url(prev_tweet, depth)}" class="nav-prev"><span class="nav-label">← Older</span><span class="nav-date">{format_date_short(prev_dt)}</span></a>')
+    else:
+        nav_parts.append('<span></span>')
+    if next_tweet:
+        next_dt = parse_date(next_tweet['created_at'])
+        nav_parts.append(f'<a href="{tweet_url(next_tweet, depth)}" class="nav-next"><span class="nav-label">Newer →</span><span class="nav-date">{format_date_short(next_dt)}</span></a>')
+    else:
+        nav_parts.append('<span></span>')
+    nav_html = f'<div class="tweet-nav">{"".join(nav_parts)}</div>'
+
     page_html = html_head(f"@{HANDLE} — {format_date_short(dt)}", depth)
     page_html += f"""<body>
 <div class="container">
     <a href="../../{year}/{month}/index.html" class="back-link">← {month_name}</a>
     {render_tweet_card(tweet, depth, is_single=True)}
+    {nav_html}
 </div>
 {html_footer()}
 </body>
@@ -743,9 +788,12 @@ def main():
     with open(os.path.join(OUTPUT_DIR, 'style.css'), 'w') as f:
         f.write(SHARED_CSS)
 
-    # Generate individual tweet pages
-    for tweet in originals:
-        generate_tweet_page(tweet, OUTPUT_DIR)
+    # Generate individual tweet pages (sorted chronologically for prev/next)
+    sorted_tweets = sorted(originals, key=lambda t: parse_date(t['created_at']))
+    for i, tweet in enumerate(sorted_tweets):
+        prev_tweet = sorted_tweets[i - 1] if i > 0 else None
+        next_tweet = sorted_tweets[i + 1] if i < len(sorted_tweets) - 1 else None
+        generate_tweet_page(tweet, OUTPUT_DIR, prev_tweet, next_tweet)
     print(f"Generated {len(originals)} tweet pages")
 
     # Generate month indexes
