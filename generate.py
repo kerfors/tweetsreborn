@@ -618,20 +618,43 @@ def generate_search_index(originals, output_dir):
     with open(os.path.join(output_dir, 'search.json'), 'w') as f:
         json.dump(index, f, ensure_ascii=False)
 
-    # Generate search page
-    search_html = html_head(f"@{HANDLE} — Search", depth=0)
-    search_html += f"""<body>
+    return len(index)
+
+
+def generate_main_index(years_data, output_dir, total_indexed=0):
+    """Generate the main archive index."""
+    depth = 0
+    total = sum(len(t) for months in years_data.values() for t in months.values())
+
+    page_html = html_head(f"@{HANDLE} — Tweet Archive", depth)
+    page_html += f"""<body>
 <div class="container">
-    <div class="breadcrumb" style="margin-bottom:20px;">
-        <a href="index.html">← Archive</a>
+    <div class="site-header">
+        <img src="media/avatar.jpg" alt="{DISPLAY_NAME}" class="avatar">
+        <h1>{DISPLAY_NAME}</h1>
+        <div class="handle-line">@{HANDLE} · {LOCATION}</div>
+        <div class="bio">{html.escape(BIO)}</div>
     </div>
-    <h2 style="font-family:var(--font-display);font-size:22px;font-weight:500;margin-bottom:20px;text-align:center;">Search tweets</h2>
+    <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+        {total} original tweets · April 2017 – November 2024
+    </p>
     <div class="search-box">
-        <input type="search" id="q" placeholder="Search {len(index)} tweets…" autofocus>
+        <input type="search" id="q" placeholder="Search {total_indexed} tweets…">
         <button onclick="doSearch()">Search</button>
     </div>
     <div id="search-status"></div>
     <div id="results"></div>
+    <div id="year-grid" class="year-grid">
+"""
+    for year in sorted(years_data.keys(), reverse=True):
+        count = sum(len(t) for t in years_data[year].values())
+        page_html += f"""        <a href="{year}/index.html" class="year-card">
+            <span class="year-label">{year}</span>
+            <span class="count">{count} tweet{'s' if count != 1 else ''}</span>
+        </a>
+"""
+
+    page_html += f"""    </div>
 </div>
 {html_footer()}
 <script>
@@ -651,19 +674,23 @@ function highlight(text, query) {{
 }}
 
 async function doSearch() {{
-    const q = document.getElementById('q').value.trim().toLowerCase();
+    const q = document.getElementById('q').value.trim();
     const status = document.getElementById('search-status');
     const results = document.getElementById('results');
+    const grid = document.getElementById('year-grid');
 
     if (q.length < 2) {{
-        status.textContent = 'Type at least 2 characters.';
+        status.textContent = '';
         results.innerHTML = '';
+        grid.style.display = '';
         return;
     }}
 
     const tweets = await loadData();
-    const matches = tweets.filter(t => t.text.toLowerCase().includes(q));
+    const ql = q.toLowerCase();
+    const matches = tweets.filter(t => t.text.toLowerCase().includes(ql));
 
+    grid.style.display = 'none';
     status.textContent = matches.length === 0
         ? 'No results.'
         : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
@@ -671,56 +698,17 @@ async function doSearch() {{
     results.innerHTML = matches.map(t => `
         <div class="search-result">
             <a href="${{t.url}}">
-                <div class="result-text">${{highlight(t.text, document.getElementById('q').value.trim())}}</div>
+                <div class="result-text">${{highlight(t.text, q)}}</div>
                 <div class="result-date">${{t.date}}</div>
             </a>
         </div>`).join('');
 }}
 
+document.getElementById('q').addEventListener('input', doSearch);
 document.getElementById('q').addEventListener('keydown', e => {{
-    if (e.key === 'Enter') doSearch();
+    if (e.key === 'Escape') {{ e.target.value = ''; doSearch(); }}
 }});
 </script>
-</body>
-</html>"""
-
-    with open(os.path.join(output_dir, 'search.html'), 'w') as f:
-        f.write(search_html)
-
-
-def generate_main_index(years_data, output_dir):
-    """Generate the main archive index."""
-    depth = 0
-    total = sum(len(t) for months in years_data.values() for t in months.values())
-
-    page_html = html_head(f"@{HANDLE} — Tweet Archive", depth)
-    page_html += f"""<body>
-<div class="container">
-    <div class="site-header">
-        <img src="media/avatar.jpg" alt="{DISPLAY_NAME}" class="avatar">
-        <h1>{DISPLAY_NAME}</h1>
-        <div class="handle-line">@{HANDLE} · {LOCATION}</div>
-        <div class="bio">{html.escape(BIO)}</div>
-    </div>
-    <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
-        {total} original tweets · April 2017 – November 2024
-    </p>
-    <p style="text-align:center;margin-bottom:24px;">
-        <a href="search.html" style="display:inline-block;padding:8px 20px;background:var(--accent);color:#fff;border-radius:8px;font-size:14px;">Search tweets</a>
-    </p>
-    <div class="year-grid">
-"""
-    for year in sorted(years_data.keys(), reverse=True):
-        count = sum(len(t) for t in years_data[year].values())
-        page_html += f"""        <a href="{year}/index.html" class="year-card">
-            <span class="year-label">{year}</span>
-            <span class="count">{count} tweet{'s' if count != 1 else ''}</span>
-        </a>
-"""
-
-    page_html += f"""    </div>
-</div>
-{html_footer()}
 </body>
 </html>"""
 
@@ -780,11 +768,11 @@ def main():
     for year, months in years_data.items():
         generate_year_index(year, months, OUTPUT_DIR)
 
-    # Generate main index
-    generate_main_index(years_data, OUTPUT_DIR)
+    # Generate search index
+    total_indexed = generate_search_index(originals, OUTPUT_DIR)
 
-    # Generate search
-    generate_search_index(originals, OUTPUT_DIR)
+    # Generate main index (needs total_indexed for placeholder text)
+    generate_main_index(years_data, OUTPUT_DIR, total_indexed)
 
     print(f"Done! Open {OUTPUT_DIR}/index.html to preview")
 
