@@ -659,6 +659,9 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
     """Generate the main archive index."""
     depth = 0
     total = sum(len(t) for months in years_data.values() for t in months.values())
+    all_tweets = [t for months in years_data.values() for tweets in months.values() for t in tweets]
+    dates = sorted(parse_date(t['created_at']) for t in all_tweets)
+    date_range = f"{dates[0].strftime('%b %Y')} – {dates[-1].strftime('%b %Y')}" if dates else ""
 
     page_html = html_head(f"@{HANDLE} — Tweet Archive", depth)
     page_html += f"""<body>
@@ -670,7 +673,7 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
         <div class="bio">{html.escape(BIO)}</div>
     </div>
     <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
-        {total} original tweets · April 2017 – November 2024
+        {total} original tweets · {date_range}
     </p>
     <div class="search-box">
         <input type="search" id="q" placeholder="Search {total_indexed} tweets…">
