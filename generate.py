@@ -233,35 +233,44 @@ a:hover { text-decoration: underline; }
     font-style: normal;
 }
 .viral-card {
-    display: block;
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 16px 20px;
     margin-bottom: 12px;
-    text-decoration: none;
-    color: inherit;
     transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .viral-card:hover {
     box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     border-color: var(--accent);
-    text-decoration: none;
 }
 .viral-text {
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.55;
     color: var(--text-primary);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 .viral-meta {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
     font-size: 13px;
     color: var(--text-secondary);
 }
 .viral-stats {
     font-weight: 500;
+    color: var(--text-secondary);
+}
+.viral-date {
+    flex: 1;
+}
+.viral-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+.viral-link:hover {
+    text-decoration: underline;
 }
 
 /* --- Single tweet page --- */
@@ -437,11 +446,11 @@ def render_tweet_text(tweet, depth=0):
     pos = 0
     for start, end, replacement in replacements:
         if start > pos:
-            parts.append(html.escape(text[pos:start]))
+            parts.append(html.escape(html.unescape(text[pos:start])))
         parts.append(replacement)
         pos = end
     if pos < len(text):
-        parts.append(html.escape(text[pos:]))
+        parts.append(html.escape(html.unescape(text[pos:])))
 
     result = ''.join(parts)
     # Convert newlines
@@ -723,13 +732,14 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
         rt = int(tweet.get('retweet_count', 0))
         text = render_tweet_text(tweet, depth=0)
         url = f"{year}/{month:02d}/{tid}.html"
-        return f"""        <a href="{url}" class="viral-card">
+        return f"""        <div class="viral-card">
             <div class="viral-text">{text}</div>
             <div class="viral-meta">
-                <span class="viral-date">{date_str}</span>
                 <span class="viral-stats">🔁 {rt} &nbsp; ♥ {fav}</span>
+                <span class="viral-date">{date_str}</span>
+                <a href="{url}" class="viral-link">Read →</a>
             </div>
-        </a>"""
+        </div>"""
 
     highlights_html = "\n".join(viral_card(t) for t in top_tweets)
 
