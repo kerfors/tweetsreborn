@@ -1,0 +1,218 @@
+
+:root {
+    --bg: #f5f5f0;
+    --card-bg: #ffffff;
+    --text: #14171a;
+    --text-secondary: #536471;
+    --accent: #1a8cd8;
+    --border: #e0ddd5;
+    --hover: #f7f7f2;
+    --media-bg: #e8e6df;
+    --link: #1a6ba8;
+    --font-body: 'Libre Franklin', 'Helvetica Neue', Helvetica, sans-serif;
+    --font-display: 'Newsreader', 'Georgia', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.container {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 20px 16px;
+}
+
+/* --- Tweet card --- */
+.tweet-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: box-shadow 0.15s ease;
+}
+.tweet-card:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.tweet-card a.tweet-link {
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+.tweet-card a.tweet-link:hover { text-decoration: none; }
+
+.tweet-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.author-info { flex: 1; min-width: 0; }
+.display-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text);
+}
+.handle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.tweet-text {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.tweet-text a { color: var(--accent); }
+.tweet-text .hashtag { color: var(--accent); }
+.tweet-text .mention { color: var(--accent); }
+
+.tweet-media {
+    margin-bottom: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+.tweet-media img {
+    width: 100%;
+    display: block;
+}
+
+.tweet-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+.tweet-meta .date { flex: 1; }
+.tweet-meta .stat { display: flex; align-items: center; gap: 4px; }
+.tweet-meta .stat svg { width: 16px; height: 16px; fill: var(--text-secondary); }
+
+.reply-indicator {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* --- Page header --- */
+.site-header {
+    text-align: center;
+    padding: 40px 0 24px;
+}
+.site-header .avatar {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 12px;
+    display: block;
+}
+.site-header h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+.site-header .handle-line {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+.site-header .bio {
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* --- Index pages --- */
+.breadcrumb {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+.breadcrumb a { color: var(--text-secondary); }
+.breadcrumb a:hover { color: var(--accent); }
+
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+.year-card, .month-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.year-card:hover, .month-card:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-color: var(--accent);
+    text-decoration: none;
+}
+.year-card .year-label, .month-card .month-label {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--text);
+    display: block;
+}
+.year-card .count, .month-card .count {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+/* --- Single tweet page --- */
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+.back-link:hover { color: var(--accent); text-decoration: none; }
+
+.single-tweet .tweet-text {
+    font-size: 20px;
+    line-height: 1.65;
+}
+
+/* --- Footer --- */
+.site-footer {
+    text-align: center;
+    padding: 32px 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+}
+
+@media (max-width: 480px) {
+    .container { padding: 12px; }
+    .tweet-card { padding: 16px; }
+    .year-grid { grid-template-columns: repeat(2, 1fr); }
+}
