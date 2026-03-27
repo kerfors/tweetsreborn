@@ -244,6 +244,54 @@ a:hover { text-decoration: underline; }
     line-height: 1.65;
 }
 
+/* --- Search --- */
+.search-box {
+    display: flex;
+    gap: 8px;
+    margin: 0 auto 28px;
+    max-width: 420px;
+}
+.search-box input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    background: var(--card-bg);
+    color: var(--text);
+    outline: none;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box button {
+    padding: 10px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    cursor: pointer;
+}
+.search-box button:hover { opacity: 0.9; }
+
+.search-result {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: box-shadow 0.15s ease;
+}
+.search-result:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.search-result a { color: inherit; text-decoration: none; display: block; }
+.search-result a:hover { text-decoration: none; }
+.search-result .result-text { font-size: 15px; margin-bottom: 6px; }
+.search-result .result-date { font-size: 13px; color: var(--text-secondary); }
+.search-result mark { background: #fff3b0; border-radius: 2px; }
+
+#search-status { text-align: center; color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; }
+
 /* --- Footer --- */
 .site-footer {
     text-align: center;
@@ -540,6 +588,106 @@ def generate_year_index(year, months_data, output_dir):
         f.write(page_html)
 
 
+def generate_search_index(originals, output_dir):
+    """Generate search.json and search.html for client-side search."""
+    # Build search index
+    index = []
+    for tweet in originals:
+        dt = parse_date(tweet['created_at'])
+        year = dt.strftime('%Y')
+        month = dt.strftime('%m')
+        tweet_id = tweet['id_str']
+        # Plain text for searching (strip HTML entities won't be there yet)
+        text = tweet['full_text']
+        # Remove media URLs at end of text
+        for media in tweet.get('entities', {}).get('media', []):
+            text = text[:int(media['indices'][0])] + text[int(media['indices'][1]):]
+        # Expand t.co URLs to display URLs
+        for url_entity in tweet.get('entities', {}).get('urls', []):
+            text = text.replace(url_entity['url'], url_entity.get('display_url', url_entity['url']))
+        index.append({
+            'id': tweet_id,
+            'text': text.strip(),
+            'date': dt.strftime('%b %d, %Y'),
+            'url': f'{year}/{month}/{tweet_id}.html',
+        })
+
+    # Sort newest first
+    index.sort(key=lambda x: x['id'], reverse=True)
+
+    with open(os.path.join(output_dir, 'search.json'), 'w') as f:
+        json.dump(index, f, ensure_ascii=False)
+
+    # Generate search page
+    search_html = html_head(f"@{HANDLE} — Search", depth=0)
+    search_html += f"""<body>
+<div class="container">
+    <div class="breadcrumb" style="margin-bottom:20px;">
+        <a href="index.html">← Archive</a>
+    </div>
+    <h2 style="font-family:var(--font-display);font-size:22px;font-weight:500;margin-bottom:20px;text-align:center;">Search tweets</h2>
+    <div class="search-box">
+        <input type="search" id="q" placeholder="Search {len(index)} tweets…" autofocus>
+        <button onclick="doSearch()">Search</button>
+    </div>
+    <div id="search-status"></div>
+    <div id="results"></div>
+</div>
+{html_footer()}
+<script>
+let data = null;
+
+async function loadData() {{
+    if (data) return data;
+    const r = await fetch('search.json');
+    data = await r.json();
+    return data;
+}}
+
+function highlight(text, query) {{
+    if (!query) return text;
+    const escaped = query.replace(/[.*+?^${{}}()|[\\]\\\\]/g, '\\\\$&');
+    return text.replace(new RegExp(escaped, 'gi'), m => '<mark>' + m + '</mark>');
+}}
+
+async function doSearch() {{
+    const q = document.getElementById('q').value.trim().toLowerCase();
+    const status = document.getElementById('search-status');
+    const results = document.getElementById('results');
+
+    if (q.length < 2) {{
+        status.textContent = 'Type at least 2 characters.';
+        results.innerHTML = '';
+        return;
+    }}
+
+    const tweets = await loadData();
+    const matches = tweets.filter(t => t.text.toLowerCase().includes(q));
+
+    status.textContent = matches.length === 0
+        ? 'No results.'
+        : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
+
+    results.innerHTML = matches.map(t => `
+        <div class="search-result">
+            <a href="${{t.url}}">
+                <div class="result-text">${{highlight(t.text, document.getElementById('q').value.trim())}}</div>
+                <div class="result-date">${{t.date}}</div>
+            </a>
+        </div>`).join('');
+}}
+
+document.getElementById('q').addEventListener('keydown', e => {{
+    if (e.key === 'Enter') doSearch();
+}});
+</script>
+</body>
+</html>"""
+
+    with open(os.path.join(output_dir, 'search.html'), 'w') as f:
+        f.write(search_html)
+
+
 def generate_main_index(years_data, output_dir):
     """Generate the main archive index."""
     depth = 0
@@ -554,8 +702,11 @@ def generate_main_index(years_data, output_dir):
         <div class="handle-line">@{HANDLE} · {LOCATION}</div>
         <div class="bio">{html.escape(BIO)}</div>
     </div>
-    <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:24px;">
+    <p style="text-align:center;color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
         {total} original tweets · April 2017 – November 2024
+    </p>
+    <p style="text-align:center;margin-bottom:24px;">
+        <a href="search.html" style="display:inline-block;padding:8px 20px;background:var(--accent);color:#fff;border-radius:8px;font-size:14px;">Search tweets</a>
     </p>
     <div class="year-grid">
 """
@@ -631,6 +782,9 @@ def main():
 
     # Generate main index
     generate_main_index(years_data, OUTPUT_DIR)
+
+    # Generate search
+    generate_search_index(originals, OUTPUT_DIR)
 
     print(f"Done! Open {OUTPUT_DIR}/index.html to preview")
 
