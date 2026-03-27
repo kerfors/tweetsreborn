@@ -217,6 +217,53 @@ a:hover { text-decoration: underline; }
     margin-top: 4px;
 }
 
+/* --- Highlights / viral tweets --- */
+.highlights {
+    margin: 0 0 32px 0;
+}
+.highlights-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: var(--text-secondary);
+    text-align: center;
+    margin: 0 0 16px 0;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    font-style: normal;
+}
+.viral-card {
+    display: block;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.viral-card:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    border-color: var(--accent);
+    text-decoration: none;
+}
+.viral-text {
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+.viral-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.viral-stats {
+    font-weight: 500;
+}
+
 /* --- Single tweet page --- */
 .back-link {
     display: inline-flex;
@@ -663,6 +710,29 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
     dates = sorted(parse_date(t['created_at']) for t in all_tweets)
     date_range = f"{dates[0].strftime('%b %Y')} – {dates[-1].strftime('%b %Y')}" if dates else ""
 
+    # Top 5 viral tweets by likes + retweets
+    top_tweets = sorted(all_tweets, key=lambda t: int(t.get('favorite_count', 0)) + int(t.get('retweet_count', 0)), reverse=True)[:5]
+
+    def viral_card(t):
+        tweet = t.get('tweet', t)
+        tid = tweet['id_str']
+        dt = parse_date(tweet['created_at'])
+        date_str = dt.strftime('%b %-d, %Y')
+        year, month = dt.year, dt.month
+        fav = int(tweet.get('favorite_count', 0))
+        rt = int(tweet.get('retweet_count', 0))
+        text = render_tweet_text(tweet, depth=0)
+        url = f"{year}/{month:02d}/{tid}.html"
+        return f"""        <a href="{url}" class="viral-card">
+            <div class="viral-text">{text}</div>
+            <div class="viral-meta">
+                <span class="viral-date">{date_str}</span>
+                <span class="viral-stats">🔁 {rt} &nbsp; ♥ {fav}</span>
+            </div>
+        </a>"""
+
+    highlights_html = "\n".join(viral_card(t) for t in top_tweets)
+
     page_html = html_head(f"@{HANDLE} — Tweet Archive", depth)
     page_html += f"""<body>
 <div class="container">
@@ -681,6 +751,10 @@ def generate_main_index(years_data, output_dir, total_indexed=0):
     </div>
     <div id="search-status"></div>
     <div id="results"></div>
+    <section class="highlights" id="highlights">
+        <h2 class="highlights-title">✨ Most popular tweets</h2>
+{highlights_html}
+    </section>
     <div id="year-grid" class="year-grid">
 """
     for year in sorted(years_data.keys(), reverse=True):
@@ -720,6 +794,7 @@ async function doSearch() {{
         status.textContent = '';
         results.innerHTML = '';
         grid.style.display = '';
+        document.getElementById('highlights').style.display = '';
         return;
     }}
 
@@ -728,6 +803,7 @@ async function doSearch() {{
     const matches = tweets.filter(t => t.text.toLowerCase().includes(ql));
 
     grid.style.display = 'none';
+    document.getElementById('highlights').style.display = 'none';
     status.textContent = matches.length === 0
         ? 'No results.'
         : matches.length + ' result' + (matches.length !== 1 ? 's' : '');
