@@ -336,10 +336,11 @@ def parse_date(date_str):
     return datetime.strptime(date_str, "%a %b %d %H:%M:%S %z %Y")
 
 
-def render_tweet_text(tweet):
+def render_tweet_text(tweet, depth=0):
     """Replace entities in full_text with HTML links, working backwards by index."""
     text = tweet['full_text']
     entities = tweet.get('entities', {})
+    index_prefix = '../' * depth
 
     # Collect all entity replacements with their indices
     replacements = []
@@ -360,7 +361,7 @@ def render_tweet_text(tweet):
     for hashtag in entities.get('hashtags', []):
         start, end = int(hashtag['indices'][0]), int(hashtag['indices'][1])
         tag = hashtag['text']
-        link = f'<span class="hashtag">#{html.escape(tag)}</span>'
+        link = f'<a href="{index_prefix}index.html?q=%23{html.escape(tag)}" class="hashtag">#{html.escape(tag)}</a>'
         replacements.append((start, end, link))
 
     # Remove media URLs from text (they appear at the end)
@@ -465,7 +466,7 @@ def html_footer():
 def render_tweet_card(tweet, depth, is_single=False):
     """Render a tweet as an HTML card."""
     dt = parse_date(tweet['created_at'])
-    text_html = render_tweet_text(tweet)
+    text_html = render_tweet_text(tweet, depth)
     media_html = get_media_html(tweet, depth)
     tweet_id = tweet['id_str']
     favs = int(tweet.get('favorite_count', 0))
@@ -741,6 +742,13 @@ document.getElementById('q').addEventListener('input', doSearch);
 document.getElementById('q').addEventListener('keydown', e => {{
     if (e.key === 'Escape') {{ e.target.value = ''; doSearch(); }}
 }});
+
+// Auto-search from URL parameter (e.g. ?q=%23CDISC from hashtag links)
+const urlQ = new URLSearchParams(window.location.search).get('q');
+if (urlQ) {{
+    document.getElementById('q').value = urlQ;
+    doSearch();
+}}
 </script>
 </body>
 </html>"""
